@@ -43,3 +43,12 @@ resource "google_project_iam_binding" "gke_network_permissions" {
         "serviceAccount:${google_service_account.gke_sa.email}"
     ]
 }
+
+resource "google_project_iam_binding" "gke_network_permissions" {
+    project = var.project_id
+    role    = "roles/rtifactregistry.reader" 
+
+    members = [
+        "serviceAccount:${google_service_account.gke_sa.email}"
+    ]
+}

@@ -14,3 +14,8 @@ output "gke_kubeconfig_command" {
     description = "The gcloud command to configure kubectl access to the cluster."
     value       = module.gke_cluster.kubeconfig_command
 }
+
+output "gke_node_count" {
+    description = "The gcloud command to get the node count of the cluster"
+    value       = var.node_count
+}
