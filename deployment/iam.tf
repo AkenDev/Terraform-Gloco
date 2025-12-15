@@ -52,3 +52,31 @@ resource "google_project_iam_binding" "gke_network_permissions" {
         "serviceAccount:${google_service_account.gke_sa.email}"
     ]
 }
+
+# 4. Define the Service Account for GitHub Actions (GHA) Deployments
+resource "google_service_account" "gha_sa" {
+    account_id   = "gha-deployer-sa-poc"
+    display_name = "GitHub Actions Deployer SA POC"
+    project      = var.project_id
+}
+
+# 5. Grant GHA SA the necessary roles for CI/CD
+# Permission to push (write) to Artifact Registry
+resource "google_project_iam_binding" "gha_artifact_writer" {
+    project = var.project_id
+    role    = "roles/artifactregistry.writer"
+
+    members = [
+        "serviceAccount:${google_service_account.gha_sa.email}"
+    ]
+}
+
+# Permission to deploy (access) the GKE cluster
+resource "google_project_iam_binding" "gha_gke_developer" {
+    project = var.project_id
+    role    = "roles/container.developer"
+
+    members = [
+        "serviceAccount:${google_service_account.gha_sa.email}"
+    ]
+}

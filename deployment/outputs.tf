@@ -19,3 +19,22 @@ output "gke_node_count" {
     description = "The gcloud command to get the node count of the cluster"
     value       = var.node_count
 }
+
+# Output 1: Email of the GHA Service Account (used for IAM bindings and WIF)
+output "gha_service_account_email" {
+  description = "The email address of the GitHub Actions Deployer Service Account."
+  value       = google_service_account.gha_sa.email
+}
+
+# Output 2: GHA Service Account ID (used in some IAM or auditing configurations)
+output "gha_service_account_id" {
+  description = "The unique ID of the GitHub Actions Deployer Service Account."
+  value       = google_service_account.gha_sa.unique_id
+}
+
+# Output 3: Full Project Number (CRITICAL for WIF setup)
+# We need the PROJECT NUMBER, not the ID, for the WIF trust relationship member.
+output "project_number" {
+  description = "The numeric project number for IAM operations."
+  value       = data.google_project.project.number
+}
