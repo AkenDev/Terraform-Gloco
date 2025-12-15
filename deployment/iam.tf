@@ -35,7 +35,7 @@ resource "google_project_iam_binding" "gke_compute_permissions" {
     ]
 }
 
-resource "google_project_iam_binding" "gke_network_permissions" {
+resource "google_project_iam_binding" "gke_network_viewer" {
     project = var.project_id
     role    = "roles/compute.networkViewer" 
 
@@ -44,9 +44,9 @@ resource "google_project_iam_binding" "gke_network_permissions" {
     ]
 }
 
-resource "google_project_iam_binding" "gke_network_permissions" {
+resource "google_project_iam_binding" "gke_artifact_reader" {
     project = var.project_id
-    role    = "roles/rtifactregistry.reader" 
+    role    = "roles/artifactregistry.reader" 
 
     members = [
         "serviceAccount:${google_service_account.gke_sa.email}"
