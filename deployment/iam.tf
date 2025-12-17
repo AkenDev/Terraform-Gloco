@@ -17,14 +17,14 @@ resource "google_service_account" "gke_sa" {
 }
 
 # 3. Grant GKE Cluster Service Account the necessary roles (Roles for the GKE SA)
-resource "google_project_iam_binding" "gke_sa_roles" {
-    project = var.project_id
-    role    = "roles/container.developer" 
-
-    members = [
-        "serviceAccount:${google_service_account.gke_sa.email}"
-    ]
-}
+#resource "google_project_iam_binding" "gke_sa_roles" {
+#    project = var.project_id
+#    role    = "roles/container.developer" 
+#
+#    members = [
+#        "serviceAccount:${google_service_account.gke_sa.email}"
+#    ]
+#}
 
 resource "google_project_iam_binding" "gke_compute_permissions" {
     project = var.project_id
@@ -72,11 +72,49 @@ resource "google_project_iam_binding" "gha_artifact_writer" {
 }
 
 # Permission to deploy (access) the GKE cluster
-resource "google_project_iam_binding" "gha_gke_developer" {
+resource "google_project_iam_binding" "container_developer" {
     project = var.project_id
     role    = "roles/container.developer"
 
     members = [
-        "serviceAccount:${google_service_account.gha_sa.email}"
+        "serviceAccount:${google_service_account.gha_sa.email}",
+        "serviceAccount:${google_service_account.gke_sa.email}",
     ]
+}
+
+# Define the main container for WIF identities
+resource "google_iam_workload_identity_pool" "gloco_pool" {
+  project      = var.project_id
+  workload_identity_pool_id = "gloco-pool"
+  display_name = "Gloco GHA WIF Pool"
+  description  = "WIF Pool for GitHub Actions Deployment"
+}
+
+# Define the trusted identity provider (GitHub)
+resource "google_iam_workload_identity_pool_provider" "github_provider" {
+  project                        = var.project_id
+  workload_identity_pool_id      = google_iam_workload_identity_pool.gloco_pool.workload_identity_pool_id
+  workload_identity_pool_provider_id = "github-provider"
+  display_name                   = "GitHub OIDC Provider"
+  
+    attribute_mapping = {
+        "google.subject" = "assertion.sub"
+        "attribute.actor" = "assertion.actor"
+        "attribute.repository" = "assertion.repository"
+    }
+
+    oidc {
+        issuer_uri = "https://token.actions.githubusercontent.com"
+        allowed_audiences = ["AkenDev"] # Use your GitHub org name or username here
+    }
+
+  attribute_condition = "assertion.repository == 'AkenDev/GlocoDevProd'"
+}
+
+# Bind the GHA Service Account to the GitHub Provider
+resource "google_service_account_iam_member" "gha_wif_binding" {
+  service_account_id = google_service_account.gha_sa.name
+  role               = "roles/iam.workloadIdentityUser"
+
+  member = "principalSet://iam.googleapis.com/projects/${data.google_project.project.number}/locations/global/workloadIdentityPools/${google_iam_workload_identity_pool.gloco_pool.workload_identity_pool_id}/attribute.repository/AkenDev/GlocoDevProd"
 }
