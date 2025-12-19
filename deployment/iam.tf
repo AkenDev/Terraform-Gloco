@@ -2,18 +2,18 @@
 
 # 1. Assign Kubernetes Admin role to a specific user (User Access)
 resource "google_project_iam_binding" "gke_admin" {
-    project = var.project_id
-    role    = "roles/container.admin"
+  project = var.project_id
+  role    = "roles/container.admin"
 
-    members = [
-        "user:${var.gke_admin_user}"  
-    ]
+  members = [
+    "user:${var.gke_admin_user}"
+  ]
 }
 
 # 2. Define the GKE Cluster Service Account
 resource "google_service_account" "gke_sa" {
-    account_id   = "gke-service-account-poc" # Added '-poc' to ensure uniqueness
-    display_name = "GKE Service Account POC"
+  account_id   = "gke-service-account-poc" # Added '-poc' to ensure uniqueness
+  display_name = "GKE Service Account POC"
 }
 
 # 3. Grant GKE Cluster Service Account the necessary roles (Roles for the GKE SA)
@@ -27,86 +27,86 @@ resource "google_service_account" "gke_sa" {
 #}
 
 resource "google_project_iam_binding" "gke_compute_permissions" {
-    project = var.project_id
-    role    = "roles/compute.viewer" 
+  project = var.project_id
+  role    = "roles/compute.viewer"
 
-    members = [
-        "serviceAccount:${google_service_account.gke_sa.email}"
-    ]
+  members = [
+    "serviceAccount:${google_service_account.gke_sa.email}"
+  ]
 }
 
 resource "google_project_iam_binding" "gke_network_viewer" {
-    project = var.project_id
-    role    = "roles/compute.networkViewer" 
+  project = var.project_id
+  role    = "roles/compute.networkViewer"
 
-    members = [
-        "serviceAccount:${google_service_account.gke_sa.email}"
-    ]
+  members = [
+    "serviceAccount:${google_service_account.gke_sa.email}"
+  ]
 }
 
 resource "google_project_iam_binding" "gke_artifact_reader" {
-    project = var.project_id
-    role    = "roles/artifactregistry.reader" 
+  project = var.project_id
+  role    = "roles/artifactregistry.reader"
 
-    members = [
-        "serviceAccount:${google_service_account.gke_sa.email}"
-    ]
+  members = [
+    "serviceAccount:${google_service_account.gke_sa.email}"
+  ]
 }
 
 # 4. Define the Service Account for GitHub Actions (GHA) Deployments
 resource "google_service_account" "gha_sa" {
-    account_id   = "gha-deployer-sa-poc"
-    display_name = "GitHub Actions Deployer SA POC"
-    project      = var.project_id
+  account_id   = "gha-deployer-sa-poc"
+  display_name = "GitHub Actions Deployer SA POC"
+  project      = var.project_id
 }
 
 # 5. Grant GHA SA the necessary roles for CI/CD
 # Permission to push (write) to Artifact Registry
 resource "google_project_iam_binding" "gha_artifact_writer" {
-    project = var.project_id
-    role    = "roles/artifactregistry.writer"
+  project = var.project_id
+  role    = "roles/artifactregistry.writer"
 
-    members = [
-        "serviceAccount:${google_service_account.gha_sa.email}"
-    ]
+  members = [
+    "serviceAccount:${google_service_account.gha_sa.email}"
+  ]
 }
 
 # Permission to deploy (access) the GKE cluster
 resource "google_project_iam_binding" "container_developer" {
-    project = var.project_id
-    role    = "roles/container.developer"
+  project = var.project_id
+  role    = "roles/container.developer"
 
-    members = [
-        "serviceAccount:${google_service_account.gha_sa.email}",
-        "serviceAccount:${google_service_account.gke_sa.email}",
-    ]
+  members = [
+    "serviceAccount:${google_service_account.gha_sa.email}",
+    "serviceAccount:${google_service_account.gke_sa.email}",
+  ]
 }
 
 # Define the main container for WIF identities
 resource "google_iam_workload_identity_pool" "gloco_pool" {
-  project      = var.project_id
+  project                   = var.project_id
   workload_identity_pool_id = "gloco-pool"
-  display_name = "Gloco GHA WIF Pool"
-  description  = "WIF Pool for GitHub Actions Deployment"
+  display_name              = "Gloco GHA WIF Pool"
+  description               = "WIF Pool for GitHub Actions Deployment"
 }
 
 # Define the trusted identity provider (GitHub)
 resource "google_iam_workload_identity_pool_provider" "github_provider" {
-  project                        = var.project_id
-  workload_identity_pool_id      = google_iam_workload_identity_pool.gloco_pool.workload_identity_pool_id
+  project                            = var.project_id
+  workload_identity_pool_id          = google_iam_workload_identity_pool.gloco_pool.workload_identity_pool_id
   workload_identity_pool_provider_id = "github-provider"
-  display_name                   = "GitHub OIDC Provider"
-  
-    attribute_mapping = {
-        "google.subject" = "assertion.sub"
-        "attribute.actor" = "assertion.actor"
-        "attribute.repository" = "assertion.repository"
-    }
+  display_name                       = "GitHub OIDC Provider"
 
-    oidc {
-        issuer_uri = "https://token.actions.githubusercontent.com"
-        allowed_audiences = ["AkenDev"] # Use your GitHub org name or username here
-    }
+  attribute_mapping = {
+    "google.subject"       = "assertion.sub"
+    "attribute.actor"      = "assertion.actor"
+    "attribute.repository" = "assertion.repository"
+  }
+
+  oidc {
+    issuer_uri        = "https://token.actions.githubusercontent.com"
+    allowed_audiences = ["AkenDev"] # Use your GitHub org name or username here
+  }
 
   attribute_condition = "assertion.repository == 'AkenDev/GlocoDevProd'"
 }

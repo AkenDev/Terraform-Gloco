@@ -27,8 +27,8 @@ module "gke_cluster" {
 
   # B. Use IAM Service Account Output (from poc-deployment/iam.tf)
   # The service account was defined in poc-deployment/iam.tf (same root module)
-  node_service_account = google_service_account.gke_sa.email 
-  
+  node_service_account = google_service_account.gke_sa.email
+
   # C. Use VPC Module Outputs for Network Connection:
   # This is the crucial connection that links the two modules!
   vpc_network_id    = module.vpc.network_id
