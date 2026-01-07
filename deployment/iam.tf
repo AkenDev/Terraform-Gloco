@@ -105,10 +105,10 @@ resource "google_iam_workload_identity_pool_provider" "github_provider" {
 
   oidc {
     issuer_uri        = "https://token.actions.githubusercontent.com"
-    allowed_audiences = ["AkenDev"] # Use your GitHub org name or username here
+    ## allowed_audiences = ["AkenDev"]
   }
 
-  attribute_condition = "assertion.repository == 'AkenDev/GlocoDevProd'"
+  attribute_condition = "assertion.repository == 'AkenDev/Gloco'"
 }
 
 # Bind the GHA Service Account to the GitHub Provider
@@ -116,5 +116,5 @@ resource "google_service_account_iam_member" "gha_wif_binding" {
   service_account_id = google_service_account.gha_sa.name
   role               = "roles/iam.workloadIdentityUser"
 
-  member = "principalSet://iam.googleapis.com/projects/${data.google_project.project.number}/locations/global/workloadIdentityPools/${google_iam_workload_identity_pool.gloco_pool.workload_identity_pool_id}/attribute.repository/AkenDev/GlocoDevProd"
+  member = "principalSet://iam.googleapis.com/projects/${data.google_project.project.number}/locations/global/workloadIdentityPools/${google_iam_workload_identity_pool.gloco_pool.workload_identity_pool_id}/attribute.repository/AkenDev/Gloco"
 }
