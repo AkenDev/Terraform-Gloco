@@ -1,4 +1,4 @@
-# poc-deployment/iam.tf
+# deployment/iam.tf
 
 # 1. Assign Kubernetes Admin role to a specific user (User Access)
 resource "google_project_iam_binding" "gke_admin" {

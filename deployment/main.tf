@@ -25,8 +25,8 @@ module "gke_cluster" {
   node_count       = var.node_count
   location         = var.specific_zone # The GKE master is often placed in a specific zone
 
-  # B. Use IAM Service Account Output (from poc-deployment/iam.tf)
-  # The service account was defined in poc-deployment/iam.tf (same root module)
+  # B. Use IAM Service Account Output (from deployment/iam.tf)
+  # The service account was defined in deployment/iam.tf (same root module)
   node_service_account = google_service_account.gke_sa.email
 
   # C. Use VPC Module Outputs for Network Connection:

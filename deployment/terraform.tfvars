@@ -1,4 +1,4 @@
-# 1. Root Deployment Variables (from poc-deployment/variables.tf)
+# 1. Root Deployment Variables (from deployment/variables.tf)
 project_id     = "glocoproject-poc" # MUST be set to your GCP Project ID
 regional_level = "us-central1"
 specific_zone  = "us-central1-a"
